@@ -1,0 +1,13 @@
+{
+  "usuarios": [
+    {
+      "id": "b0ab",
+      "username": "cris due",
+      "password": "123456",
+      "balance": 1000,
+      "depositos": [],
+      "compras": []
+    }
+  ],
+  "depositosPendentes": []
+}
