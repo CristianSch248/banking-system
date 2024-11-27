@@ -1,6 +1,13 @@
 import { Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import axios from 'axios';
-import { CreateUserDto, UpdateUserDto } from './user.dto';
+import { CreateUserDto, LoginUserDto, UpdateUserDto } from './user.dto';
+
+
+interface Usuario {
+  id: string;
+  username: string;
+  password: string;
+}
 
 @Injectable()
 export class UserService {
@@ -43,6 +50,27 @@ export class UserService {
     const response = await axios.delete(`${this.baseUrl}/${id}`);
     if (!response.data) throw new NotFoundException('User not found');
     return { message: 'User deleted successfully' };
+  }
+
+  async authenticateUser(loginUserDto: LoginUserDto): Promise<string | null> {
+    try {
+      // Fazendo a requisição ao JSON server
+      const response = await axios.get<Usuario[]>(this.baseUrl); // Tipando o retorno como array de usuários
+      const usuarios = response.data;
+
+      // Buscando o usuário com o username e password fornecidos
+      const usuario = usuarios.find(
+        (user) =>
+          user.username === loginUserDto.username && user.password === loginUserDto.password,
+      );
+
+      if (usuario) return usuario.id;
+
+      return null;
+    } catch (error) {
+      console.error('Erro ao autenticar usuário:', error.message);
+      throw new Error('Erro ao autenticar usuário.');
+    }
   }
 
   async authenticateAdmin(username: string, password: string) {

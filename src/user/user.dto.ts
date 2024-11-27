@@ -29,3 +29,11 @@ export class UpdateUserDto {
   })
   readonly balance?: number;
 }
+
+export class LoginUserDto {
+  @ApiProperty({ description: 'Nome do usuário', example: 'john_doe', required: false })
+  readonly username?: string;
+
+  @ApiProperty({ description: 'Senha do usuário', example: '123456', required: false })
+  readonly password?: string;
+}

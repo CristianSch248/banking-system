@@ -7,6 +7,13 @@
       "balance": 1000,
       "depositos": [],
       "compras": []
+    },
+    {
+      "id": "93ae",
+      "username": "novo user",
+      "password": "1234",
+      "balance": 32132,
+      "depositos": []
     }
   ],
   "depositosPendentes": []

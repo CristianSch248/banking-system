@@ -8,7 +8,7 @@ import {
   Put,
 } from '@nestjs/common';
 import { ApiBody, ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
-import { CreateUserDto, UpdateUserDto } from './user.dto';
+import { CreateUserDto, LoginUserDto, UpdateUserDto } from './user.dto';
 import { UserService } from './user.service';
 
 // Agrupa as rotas no Swagger
@@ -53,6 +53,14 @@ export class UserController {
   @Delete(':id')
   async deleteUser(@Param('id') id: string) {
     return this.userService.deleteUser(id);
+  }
+
+  @ApiOperation({ summary: 'Autenticar usuario' })
+  @Post('/auth/user')
+  async authenticateUser(
+    @Body() LoginUserDto: LoginUserDto,
+  ) {
+    return this.userService.authenticateUser(LoginUserDto);
   }
 
   @ApiOperation({ summary: 'Autenticar administrador' })
