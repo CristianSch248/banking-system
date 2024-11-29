@@ -12,6 +12,9 @@ export class CreateDepositDto {
 }
 
 export class UpdateDepositDto {
+  @ApiProperty({ description: 'ID do deposito', example: 4803 })
+  readonly id: string;
+
   @ApiProperty({ description: 'Valor do depósito (opcional)', example: 1250.25 })
   readonly valor: number;
 

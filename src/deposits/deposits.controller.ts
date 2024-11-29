@@ -20,7 +20,7 @@ export class DepositsController {
     @ApiOperation({ summary: 'Criar um novo depósito' })
     @ApiBody({ type: CreateDepositDto })
     @Post()
-    async createDeposit(@Body() createDepositDto: CreateDepositDto): Promise<Deposit> {
+    async createDeposit(@Body() createDepositDto: CreateDepositDto){
         try {
             return await this.depositsService.createDeposit(createDepositDto);
         } catch (error) {

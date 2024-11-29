@@ -5,97 +5,130 @@ import { Deposit, User } from './deposits.types';
 
 @Injectable()
 export class DepositsService {
-  private readonly baseUrl = 'http://localhost:3001/depositos';
   private readonly baseUrlUsers = 'http://localhost:3001/usuarios';
   private readonly baseUrlPendingDeposits = 'http://localhost:3001/depositosPendentes';
 
   async getDeposits() {
-    const response = await axios.get(this.baseUrl);
-    return response.data;
+    try {
+      const response = await axios.get<Deposit[]>(this.baseUrlPendingDeposits);
+      return response.data;
+    } catch (error) {
+      throw new Error('Erro ao buscar depósitos pendentes');
+    }
   }
 
-  async createDeposit(createDepositDto: CreateDepositDto): Promise<Deposit> {
-    const response = await axios.post<Deposit>(this.baseUrl, createDepositDto);
-    return response.data;
-}
-
+  async createDeposit(createDepositDto: CreateDepositDto) {
+    try {
+      const response = await axios.post<Deposit>(this.baseUrlPendingDeposits, createDepositDto);
+      return response.data;
+    } catch (error) {
+      throw new Error('Erro ao criar depósito');
+    }
+  }
 
   async approveDeposit(updateDepositDto: UpdateDepositDto) {
-    const { userId } = updateDepositDto;
+    const { id, userId } = updateDepositDto;
 
-    // Atualizar o status do depósito para "Aprovado"
-    const depositResponse = await axios.put<Deposit>(`${this.baseUrl}/${userId}`, {
-      ...updateDepositDto,
-      status: 'Aprovado',
-    });
+    try {
+      // Obter depósitos pendentes
+      const pendingDepositsResponse = await axios.get<Deposit[]>(this.baseUrlPendingDeposits);
+      const depositosPendentes = pendingDepositsResponse.data;
 
-    const deposit = depositResponse.data;
+      // Encontrar o depósito
+      const deposit = depositosPendentes.find((d) => d.id === id);
+      if (!deposit) {
+        throw new NotFoundException('Depósito pendente não encontrado');
+      }
 
-    // Buscar o usuário pelo ID relacionado ao depósito
-    const userResponse = await axios.get<User>(`${this.baseUrlUsers}/${userId}`);
-    if (!userResponse.data) {
-      throw new NotFoundException('Usuário não encontrado');
+      // Atualizar status para "Aprovado"
+      deposit.status = 'Aprovado';
+
+      // Atualizar lista de depósitos pendentes
+      const updatedPendingDeposits = depositosPendentes.filter((d) => d.id !== id);
+      await axios.put(`${this.baseUrlPendingDeposits}`, updatedPendingDeposits);
+
+      // Buscar usuário
+      const userResponse = await axios.get<User>(`${this.baseUrlUsers}/${userId}`);
+      if (!userResponse.data) {
+        throw new NotFoundException('Usuário não encontrado');
+      }
+
+      const user = userResponse.data;
+
+      // Atualizar depósitos do usuário
+      const updatedUser = {
+        ...user,
+        depositos: [...user.depositos, deposit],
+      };
+
+      await axios.put(`${this.baseUrlUsers}/${userId}`, updatedUser);
+
+      return { message: 'Depósito aprovado e adicionado ao usuário', deposit };
+    } catch (error) {
+      console.error("Erro ao aprovar depósito:", error);
+      throw new Error('Erro ao aprovar depósito');
     }
-
-    const user = userResponse.data;
-
-    // Atualizar a lista de depósitos do usuário
-    const updatedUser = {
-      ...user,
-      depositos: [...user.depositos, deposit],
-    };
-
-    await axios.put(`${this.baseUrlUsers}/${userId}`, updatedUser);
-
-    return { message: 'Depósito aprovado e adicionado ao usuário', deposit };
   }
 
   async rejectDeposit(updateDepositDto: UpdateDepositDto) {
-    const { userId } = updateDepositDto;
+    const { id, userId } = updateDepositDto;
 
-    const depositResponse = await axios.put<Deposit>(`${this.baseUrl}/${userId}`, {
-      ...updateDepositDto,
-      status: 'Rejeitado',
-    });
+    try {
+      // Obter depósitos pendentes
+      const pendingDepositsResponse = await axios.get<Deposit[]>(this.baseUrlPendingDeposits);
+      const depositosPendentes = pendingDepositsResponse.data;
 
-    const deposit = depositResponse.data;
+      // Encontrar o depósito
+      const deposit = depositosPendentes.find((d) => d.id === id);
+      if (!deposit) {
+        throw new NotFoundException('Depósito pendente não encontrado');
+      }
 
-    const userResponse = await axios.get<User>(`${this.baseUrlUsers}/${userId}`);
-    if (!userResponse.data) {
-      throw new NotFoundException('Usuário não encontrado');
+      // Atualizar status para "Rejeitado"
+      deposit.status = 'Rejeitado';
+
+      // Atualizar lista de depósitos pendentes
+      const updatedPendingDeposits = depositosPendentes.filter((d) => d.id !== id);
+      await axios.put(`${this.baseUrlPendingDeposits}`, updatedPendingDeposits);
+
+      // Buscar usuário
+      const userResponse = await axios.get<User>(`${this.baseUrlUsers}/${userId}`);
+      if (!userResponse.data) {
+        throw new NotFoundException('Usuário não encontrado');
+      }
+
+      const user = userResponse.data;
+
+      // Atualizar depósitos do usuário
+      const updatedUser = {
+        ...user,
+        depositos: [...user.depositos, deposit],
+      };
+
+      await axios.put(`${this.baseUrlUsers}/${userId}`, updatedUser);
+
+      return { message: 'Depósito rejeitado e adicionado ao usuário', deposit };
+    } catch (error) {
+      console.error("Erro ao rejeitar depósito:", error);
+      throw new Error('Erro ao rejeitar depósito');
     }
-
-    const user = userResponse.data;
-
-    const updatedUser = {
-      ...user,
-      depositos: [...user.depositos, deposit],
-    };
-
-    await axios.put(`${this.baseUrlUsers}/${userId}`, updatedUser);
-
-    return { message: 'Depósito rejeitado e adicionado ao usuário', deposit };
   }
 
   async getPendingDeposits(): Promise<Deposit[]> {
-    const response = await axios.get<Array<{ idUser: string; valor: number; status: string }>>(
-      this.baseUrlPendingDeposits
-    );
+    try {
+      const response = await axios.get<Deposit[]>(this.baseUrlPendingDeposits);
 
-    if (!response.data) {
-      throw new NotFoundException('Nenhum depósito pendente encontrado');
+      if (!response.data || response.data.length === 0) {
+        throw new NotFoundException('Nenhum depósito pendente encontrado');
+      }
+
+      // Filtrar apenas depósitos pendentes
+      const pendingDeposits = response.data.filter((deposit) => deposit.status === 'Pendente');
+
+      return pendingDeposits;
+    } catch (error) {
+      console.error('Erro ao buscar depósitos pendentes:', error);
+      throw new Error('Erro ao buscar depósitos pendentes');
     }
-
-    // Mapeando os dados recebidos para o formato esperado pelo tipo Deposit
-    const pendingDeposits: Deposit[] = response.data
-      .filter(deposit => deposit.status === 'Pendente')
-      .map(deposit => ({
-        id: '', // Adicione aqui como o ID deve ser preenchido
-        userId: deposit.idUser,
-        valor: deposit.valor,
-        status: deposit.status,
-      }));
-
-    return pendingDeposits;
   }
 }

@@ -2,19 +2,37 @@
   "usuarios": [
     {
       "id": "b0ab",
-      "username": "cris due",
+      "username": "cristian",
       "password": "123456",
-      "balance": 1000,
+      "balance": 985,
       "depositos": [],
-      "compras": []
-    },
-    {
-      "id": "93ae",
-      "username": "novo user",
-      "password": "1234",
-      "balance": 32132,
-      "depositos": []
+      "compras": [
+        {
+          "descricao": "ração",
+          "valor": 15,
+          "date": "2024-11-29T17:46:19.871Z"
+        }
+      ]
     }
   ],
-  "depositosPendentes": []
+  "depositosPendentes": [
+    {
+      "id": "4803",
+      "valor": 55,
+      "status": "Pendente",
+      "userId": "b0ab"
+    },
+    {
+      "id": "4803",
+      "valor": 80,
+      "status": "Pendente",
+      "userId": "b0ab"
+    },
+    {
+      "id": "4804",
+      "valor": 100,
+      "status": "Pendente",
+      "userId": "b0ab"
+    }
+  ]
 }

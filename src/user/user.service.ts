@@ -34,6 +34,7 @@ export class UserService {
     const userWithDepositos = {
       ...createUserDto,
       depositos: [],
+      compras: []
     };
   
     const response = await axios.post(this.baseUrl, userWithDepositos);
@@ -52,22 +53,24 @@ export class UserService {
     return { message: 'User deleted successfully' };
   }
 
-  async authenticateUser(loginUserDto: LoginUserDto): Promise<string | null> {
+  async authenticateUser(loginUserDto: LoginUserDto): Promise<string> {
     try {
-      // Fazendo a requisição ao JSON server
       const response = await axios.get<Usuario[]>(this.baseUrl); // Tipando o retorno como array de usuários
       const usuarios = response.data;
 
-      // Buscando o usuário com o username e password fornecidos
       const usuario = usuarios.find(
-        (user) =>
-          user.username === loginUserDto.username && user.password === loginUserDto.password,
-      );
-
-      if (usuario) return usuario.id;
-
-      return null;
+        (user) => user.username === loginUserDto.username && user.password === loginUserDto.password,
+      )
+  
+      if (usuario) {
+        return usuario.id; 
+      }
+  
+      throw new UnauthorizedException('Credenciais inválidas');
     } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        throw error; // Propaga a exceção "UnauthorizedException"
+      }
       console.error('Erro ao autenticar usuário:', error.message);
       throw new Error('Erro ao autenticar usuário.');
     }

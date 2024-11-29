@@ -4,6 +4,7 @@ import { AcquisitionsService } from './acquisitions.service';
 
 @Module({
   controllers: [AcquisitionsController],
-  providers: [AcquisitionsService]
+  providers: [AcquisitionsService],
+  exports: [AcquisitionsService], // Necessário se for usado em outro módulo
 })
 export class AcquisitionsModule {}
