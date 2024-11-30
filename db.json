@@ -13,6 +13,14 @@
           "date": "2024-11-29T17:46:19.871Z"
         }
       ]
+    },
+    {
+      "id": "484b",
+      "username": "criis",
+      "password": "1234",
+      "balance": 0,
+      "depositos": [],
+      "compras": []
     }
   ],
   "depositosPendentes": [

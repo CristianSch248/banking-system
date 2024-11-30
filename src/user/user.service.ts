@@ -14,8 +14,8 @@ export class UserService {
   private readonly baseUrl = 'http://localhost:3001/usuarios';
 
   private readonly adminCredentials = {
-    user: 'admin',
-    senha: '123456',
+    username: 'admin',
+    password: '123456',
   };
 
   async getUsers() {
@@ -53,15 +53,15 @@ export class UserService {
     return { message: 'User deleted successfully' };
   }
 
-  async authenticateUser(loginUserDto: LoginUserDto): Promise<string> {
+  async authenticateUser(loginUserDto: LoginUserDto) {
     try {
       const response = await axios.get<Usuario[]>(this.baseUrl); // Tipando o retorno como array de usuários
       const usuarios = response.data;
 
       const usuario = usuarios.find(
-        (user) => user.username === loginUserDto.username && user.password === loginUserDto.password,
+        (user) => user.username == loginUserDto.username && user.password == loginUserDto.password,
       )
-  
+
       if (usuario) {
         return usuario.id; 
       }
@@ -69,7 +69,7 @@ export class UserService {
       throw new UnauthorizedException('Credenciais inválidas');
     } catch (error) {
       if (error instanceof UnauthorizedException) {
-        throw error; // Propaga a exceção "UnauthorizedException"
+        throw error;
       }
       console.error('Erro ao autenticar usuário:', error.message);
       throw new Error('Erro ao autenticar usuário.');
@@ -78,11 +78,17 @@ export class UserService {
 
   async authenticateAdmin(username: string, password: string) {
     if (
-      username === this.adminCredentials.user &&
-      password === this.adminCredentials.senha
+      username === this.adminCredentials.username &&
+      password === this.adminCredentials.password
     ) {
-      return { message: 'Login bem-sucedido' }
+      return {
+        statusCode: 200,
+        message: 'Login bem-sucedido',
+      };
     }
-    throw new UnauthorizedException('Credenciais inválidas');
-  }
+    throw new UnauthorizedException({
+      statusCode: 401,
+      message: 'Credenciais inválidas',
+    });
+  }  
 }

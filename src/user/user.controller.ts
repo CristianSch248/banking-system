@@ -65,12 +65,10 @@ export class UserController {
 
   @ApiOperation({ summary: 'Autenticar administrador' })
   @Post('/auth/admin')
-  async authenticateAdmin(
-    @Body() credentials: { user: string; senha: string },
-  ) {
+  async authenticateAdmin( @Body() credentials: { username: string; password: string } ) {
     return this.userService.authenticateAdmin(
-      credentials.user,
-      credentials.senha,
+      credentials.username,
+      credentials.password,
     );
   }
 }
