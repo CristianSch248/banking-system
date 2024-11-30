@@ -8,7 +8,11 @@ export interface Deposit {
 
 export interface User {
     id: string;
-    name: string;
+    username: string;
+    password: string;
+    balance: number;
     depositos: Deposit[];
+    compras: { descricao: string; valor: number; date: string }[];
 }
+  
 

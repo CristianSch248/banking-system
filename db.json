@@ -4,13 +4,97 @@
       "id": "b0ab",
       "username": "cristian",
       "password": "123456",
-      "balance": 985,
-      "depositos": [],
+      "balance": 1405,
+      "depositos": [
+        {
+          "id": "4803",
+          "valor": 55,
+          "status": "Aprovado",
+          "userId": "b0ab"
+        },
+        {
+          "id": "4804",
+          "valor": 100,
+          "status": "Aprovado",
+          "userId": "b0ab"
+        },
+        {
+          "id": "53e1",
+          "valor": 1000,
+          "status": "Aprovado",
+          "userId": "b0ab"
+        },
+        {
+          "id": "4803",
+          "valor": 55,
+          "status": "Aprovado",
+          "userId": "b0ab"
+        },
+        {
+          "id": "4803",
+          "valor": 80,
+          "status": "Aprovado",
+          "userId": "b0ab"
+        },
+        {
+          "id": "8e42",
+          "valor": 100,
+          "status": "Aprovado",
+          "userId": "b0ab"
+        },
+        {
+          "id": "51e3",
+          "valor": 200,
+          "status": "Aprovado",
+          "userId": "b0ab"
+        },
+        {
+          "id": "bb78",
+          "valor": 50,
+          "status": "Aprovado",
+          "userId": "b0ab"
+        },
+        {
+          "id": "5e47",
+          "valor": 22,
+          "status": "Rejeitado",
+          "userId": "b0ab"
+        },
+        {
+          "id": "adc2",
+          "valor": 33,
+          "status": "Rejeitado",
+          "userId": "b0ab"
+        },
+        {
+          "id": "80b3",
+          "valor": 22,
+          "status": "Rejeitado",
+          "userId": "b0ab"
+        },
+        {
+          "id": "a90c",
+          "valor": 3,
+          "status": "Rejeitado",
+          "userId": "b0ab"
+        },
+        {
+          "id": "88d2",
+          "valor": 2,
+          "status": "Rejeitado",
+          "userId": "b0ab"
+        }
+      ],
       "compras": [
         {
           "descricao": "ração",
           "valor": 15,
           "date": "2024-11-29T17:46:19.871Z"
+        },
+        {
+          "descricao": "celular",
+          "valor": 10,
+          "date": "2024-11-30T16:04:24.722Z"
         }
       ]
     },
@@ -23,24 +107,5 @@
       "compras": []
     }
   ],
-  "depositosPendentes": [
-    {
-      "id": "4803",
-      "valor": 55,
-      "status": "Pendente",
-      "userId": "b0ab"
-    },
-    {
-      "id": "4803",
-      "valor": 80,
-      "status": "Pendente",
-      "userId": "b0ab"
-    },
-    {
-      "id": "4804",
-      "valor": 100,
-      "status": "Pendente",
-      "userId": "b0ab"
-    }
-  ]
+  "depositosPendentes": []
 }
