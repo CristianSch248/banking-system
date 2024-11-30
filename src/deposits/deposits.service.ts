@@ -1,130 +1,75 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import axios from 'axios';
+import { v4 as uuidv4 } from 'uuid'; // Geração de IDs únicos
+import { DataStoreService } from '../datastore/datastore.service';
 import { CreateDepositDto, UpdateDepositDto } from './deposits.dto';
-import { Deposit, User } from './deposits.types';
+import { Deposit } from './deposits.types';
 
 @Injectable()
 export class DepositsService {
-  private readonly baseUrlUsers = 'http://localhost:3001/usuarios';
-  private readonly baseUrlPendingDeposits = 'http://localhost:3001/depositosPendentes';
+  constructor(private readonly dataStoreService: DataStoreService) {}
 
-  async getDeposits() {
-    try {
-      const response = await axios.get<Deposit[]>(this.baseUrlPendingDeposits);
-      return response.data;
-    } catch (error) {
-      throw new Error('Erro ao buscar depósitos pendentes');
-    }
+  async getDeposits(): Promise<Deposit[]> {
+    return this.dataStoreService.getDepositosPendentes();
   }
 
-  async createDeposit(createDepositDto: CreateDepositDto) {
-    try {
-      const response = await axios.post<Deposit>(this.baseUrlPendingDeposits, createDepositDto);
-      return response.data;
-    } catch (error) {
-      throw new Error('Erro ao criar depósito');
-    }
+  async createDeposit(createDepositDto: CreateDepositDto): Promise<Deposit> {
+
+    const newDeposit: Deposit = {
+      ...createDepositDto,
+      id: uuidv4(),
+      status: 'Pendente', 
+    };
+
+    this.dataStoreService.addDepositoPendente(newDeposit);
+    return newDeposit;
   }
 
-  async approveDeposit(updateDepositDto: UpdateDepositDto) {
+  async approveDeposit(updateDepositDto: UpdateDepositDto): Promise<{ message: string; deposit: Deposit }> {
     const { id, userId } = updateDepositDto;
-  
-    try {
-      const pendingDepositsResponse = await axios.get<Deposit[]>(this.baseUrlPendingDeposits);
-      const depositosPendentes = pendingDepositsResponse.data;
 
-      const deposit = depositosPendentes.find((d) => d.id === id);
-      if (!deposit) throw new NotFoundException('Depósito pendente não encontrado');
-      
-      deposit.status = 'Aprovado';
+    const deposit = this.dataStoreService.getDepositosPendentes().find((d) => d.id === id);
+    if (!deposit) throw new NotFoundException('Depósito pendente não encontrado');
 
-      await axios.delete(`${this.baseUrlPendingDeposits}/${id}`);
+    deposit.status = 'Aprovado';
 
-      const userResponse = await axios.get<User>(`${this.baseUrlUsers}/${userId}`);
-      if (!userResponse.data) throw new NotFoundException('Usuário não encontrado');
-      
-      const user = userResponse.data;
+    this.dataStoreService.removeDepositoPendente(id);
 
-      const updatedBalance = user.balance + deposit.valor;
+    const user = this.dataStoreService.getUsuarioById(userId);
+    if (!user) throw new NotFoundException('Usuário não encontrado');
 
-      const updatedUser = {
-        ...user,
-        balance: updatedBalance,
-        depositos: [...user.depositos, deposit],
-      };
+    user.balance += deposit.valor;
+    user.depositos.push(deposit);
 
-      await axios.put(`${this.baseUrlUsers}/${userId}`, updatedUser);
+    this.dataStoreService.updateUsuario(userId, user);
 
-      return { message: 'Depósito aprovado e adicionado ao usuário', deposit };
-    } catch (error) {
-      console.error('Erro ao aprovar depósito:', {
-        message: error.message,
-        stack: error.stack,
-        responseData: error.response?.data,
-        status: error.response?.status,
-      });
-      throw new Error('Erro ao aprovar depósito');
-    }
+    return { message: 'Depósito aprovado e adicionado ao usuário', deposit };
   }
-      
-  async rejectDeposit(updateDepositDto: UpdateDepositDto) {
+
+  async rejectDeposit(updateDepositDto: UpdateDepositDto): Promise<{ message: string; deposit: Deposit }> {
     const { id, userId } = updateDepositDto;
-  
-    try { 
-      const pendingDepositsResponse = await axios.get<Deposit[]>(this.baseUrlPendingDeposits);
-      const depositosPendentes = pendingDepositsResponse.data;
-  
-      const deposit = depositosPendentes.find((d) => d.id === id);
-      if (!deposit) {
-        throw new NotFoundException('Depósito pendente não encontrado');
-      }
-  
-      deposit.status = 'Rejeitado';
-  
-      await axios.delete(`${this.baseUrlPendingDeposits}/${id}`);
-  
-      const userResponse = await axios.get<User>(`${this.baseUrlUsers}/${userId}`);
-      if (!userResponse.data) {
-        throw new NotFoundException('Usuário não encontrado');
-      }
-  
-      const user = userResponse.data;
-  
-      // Adicionar o depósito rejeitado ao usuário
-      const updatedUser = {
-        ...user,
-        depositos: [...user.depositos, deposit],
-      };
 
-      await axios.put(`${this.baseUrlUsers}/${userId}`, updatedUser);
-  
-      return { message: 'Depósito rejeitado e adicionado ao usuário', deposit };
-    } catch (error) {
-      console.error('Erro ao rejeitar depósito:', {
-        message: error.message,
-        stack: error.stack,
-        responseData: error.response?.data,
-        status: error.response?.status,
-      });
-      throw new Error('Erro ao rejeitar depósito');
-    }
+    const deposit = this.dataStoreService.getDepositosPendentes().find((d) => d.id === id);
+    if (!deposit) throw new NotFoundException('Depósito pendente não encontrado');
+
+    deposit.status = 'Rejeitado';
+
+    this.dataStoreService.removeDepositoPendente(id);
+
+    const user = this.dataStoreService.getUsuarioById(userId);
+    if (!user) throw new NotFoundException('Usuário não encontrado');
+
+    user.depositos.push(deposit);
+
+    this.dataStoreService.updateUsuario(userId, user);
+
+    return { message: 'Depósito rejeitado e adicionado ao usuário', deposit };
   }
-  
+
   async getPendingDeposits(): Promise<Deposit[]> {
-    try {
-      const response = await axios.get<Deposit[]>(this.baseUrlPendingDeposits);
-
-      if (!response.data || response.data.length === 0) {
-        throw new NotFoundException('Nenhum depósito pendente encontrado');
-      }
-
-      // Filtrar apenas depósitos pendentes
-      const pendingDeposits = response.data.filter((deposit) => deposit.status === 'Pendente');
-
-      return pendingDeposits;
-    } catch (error) {
-      console.error('Erro ao buscar depósitos pendentes:', error);
-      throw new Error('Erro ao buscar depósitos pendentes');
-    }
+    
+    const pendingDeposits = this.dataStoreService.getDepositosPendentes().filter((deposit) => deposit.status === 'Pendente');
+    if (!pendingDeposits || pendingDeposits.length === 0) throw new NotFoundException('Nenhum depósito pendente encontrado');
+    
+    return pendingDeposits;
   }
 }

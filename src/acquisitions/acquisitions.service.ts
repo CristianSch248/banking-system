@@ -1,48 +1,27 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import axios from 'axios';
+import { DataStoreService } from '../datastore/datastore.service';
 import { CreateAcquisitionDto } from './acquisition.dto';
-
-interface User {
-  id: string;
-  username: string;
-  password: string;
-  balance: number;
-  depositos: any[];
-  compras: { descricao: string; valor: number; date: string }[];
-}
 
 @Injectable()
 export class AcquisitionsService {
-  private readonly baseUrl = 'http://localhost:3001/usuarios';
+  constructor(private readonly dataStoreService: DataStoreService) {}
 
   async createAcquisition(userId: string, createAcquisitionDto: CreateAcquisitionDto) {
     const { descricao, valor } = createAcquisitionDto;
 
-    // Validações iniciais
     const valorNumber = parseFloat(valor);
-    if (isNaN(valorNumber) || valorNumber <= 0) {
-      throw new BadRequestException('Valor inválido.');
-    }
-
-    // Busca o usuário no servidor JSON
-    const userResponse = await axios.get<User>(`${this.baseUrl}/${userId}`);
-    const user = userResponse.data;
-    if (!user) {
-      throw new NotFoundException('Usuário não encontrado.');
-    }
-
-    // Verifica saldo
-    if (user.balance < valorNumber) {
-      throw new BadRequestException('Saldo insuficiente.');
-    }
-
-    // Atualiza saldo e adiciona a compra
+    if (isNaN(valorNumber) || valorNumber <= 0) throw new BadRequestException('Valor inválido.');
+    
+    const user = this.dataStoreService.getUsuarioById(userId);
+    if (!user) throw new NotFoundException('Usuário não encontrado.');
+    if (user.balance < valorNumber) throw new BadRequestException('Saldo insuficiente.');
+    
     user.balance -= valorNumber;
+
     const newPurchase = { descricao, valor: valorNumber, date: new Date().toISOString() };
     user.compras.push(newPurchase);
 
-    // Salva as mudanças no servidor JSON
-    await axios.put(`${this.baseUrl}/${userId}`, user);
+    this.dataStoreService.updateUsuario(userId, user);
 
     return {
       message: 'Compra realizada com sucesso!',
@@ -51,15 +30,9 @@ export class AcquisitionsService {
   }
 
   async getAcquisitions(userId: string) {
-    // Busca o usuário no servidor JSON
-    const userResponse = await axios.get<User>(`${this.baseUrl}/${userId}`);
-    const user = userResponse.data;
-
-    if (!user) {
-      throw new NotFoundException('Usuário não encontrado.');
-    }
-
-    // Retorna as compras do usuário
+    const user = this.dataStoreService.getUsuarioById(userId);
+    if (!user) throw new NotFoundException('Usuário não encontrado.');
+    
     return user.compras;
   }
 }
